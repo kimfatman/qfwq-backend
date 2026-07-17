@@ -3,8 +3,6 @@ FROM node:20-bookworm-slim AS deps
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
-
 COPY package.json package-lock.json* ./
 RUN npm ci --only=production && \
     npm install prisma --save-dev
@@ -25,9 +23,6 @@ COPY . .
 FROM node:20-bookworm-slim AS runner
 
 WORKDIR /app
-
-# 安装运行时依赖
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # 安装 PM2
 RUN npm install -g pm2
