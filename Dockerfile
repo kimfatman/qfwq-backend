@@ -3,8 +3,8 @@ FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-# 用阿里云镜像安装 openssl（Prisma 运行时需要检测 SSL 版本）
-RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null; \
+# 用腾讯云镜像安装 openssl（Prisma 运行时需要检测 SSL 版本）
+RUN sed -i 's|deb.debian.org|mirrors.tencentyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null; \
     apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 
 # 安装 PM2
