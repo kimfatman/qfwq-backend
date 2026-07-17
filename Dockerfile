@@ -3,6 +3,8 @@ FROM node:20-bookworm-slim AS deps
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json* ./
 RUN npm ci --only=production && \
     npm install prisma --save-dev
@@ -24,12 +26,15 @@ FROM node:20-bookworm-slim AS runner
 
 WORKDIR /app
 
+# 安装运行时依赖
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 # 安装 PM2
 RUN npm install -g pm2
 
-# 创建非 root 用户
+# 创建非 root 用户（-m 创建 home 目录）
 RUN groupadd -g 1001 nodejs && \
-    useradd -r -u 1001 -g nodejs appuser
+    useradd -m -u 1001 -g nodejs appuser
 
 # 复制生产依赖和 prisma 客户端
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
