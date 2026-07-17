@@ -1,655 +1,385 @@
 /**
- * 种子数据脚本 - 企服外勤代办宝
- * 使用 prisma upsert 确保幂等，可重复执行
+ * 种子数据 - 企服外勤代办宝
+ * 执行方式: docker exec qfwq-app node prisma/seed.js
  */
-require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// ==================== 服务分类及服务数据 ====================
-const serviceCategories = [
-  {
-    category: 'gszc',
-    categoryName: '工商注册',
-    services: [
-      {
-        name: '公司注册',
-        description: '提供全流程公司注册服务，包含名称核准、营业执照办理、刻章备案等',
-        icon: '🏢',
-        basePrice: 800,
-        timeDesc: '5-7个工作日',
-        isHot: true,
-        process: [
-          { step: 1, title: '在线咨询', desc: '描述需求，确认服务内容' },
-          { step: 2, title: '提交资料', desc: '提供股东身份证、公司章程等材料' },
-          { step: 3, title: '名称核准', desc: '提交工商局进行名称预核准' },
-          { step: 4, title: '提交登记', desc: '向工商局提交注册登记申请' },
-          { step: 5, title: '领取执照', desc: '领取营业执照正副本' },
-          { step: 6, title: '刻章备案', desc: '公章、财务章、法人章刻制及备案' }
-        ],
-        materials: [
-          { name: '股东身份证复印件', required: true },
-          { name: '公司章程', required: true },
-          { name: '股东会决议', required: true },
-          { name: '注册地址证明', required: true },
-          { name: '法定代表人任职文件', required: true }
-        ],
-        faq: [
-          { q: '注册公司需要多少注册资本？', a: '目前实行认缴制，无最低注册资本限制（特殊行业除外），建议根据业务需求合理设定。' },
-          { q: '注册地址有什么要求？', a: '需要提供真实有效的商业办公地址，不可使用住宅地址（除住居改商外）。' },
-          { q: '整个流程大概需要多久？', a: '材料齐全的情况下，一般5-7个工作日即可拿到营业执照。' }
-        ]
-      },
-      {
-        name: '个体户注册',
-        description: '个体工商户注册登记，适合个人创业和小微经营',
-        icon: '🏪',
-        basePrice: 300,
-        timeDesc: '3-5个工作日',
-        isHot: false,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认经营范围和注册信息' },
-          { step: 2, title: '提交资料', desc: '提供身份证、经营场所证明等' },
-          { step: 3, title: '工商登记', desc: '向工商局提交登记申请' },
-          { step: 4, title: '领取执照', desc: '领取个体工商户营业执照' }
-        ],
-        materials: [
-          { name: '经营者身份证', required: true },
-          { name: '经营场所证明', required: true },
-          { name: '一寸免冠照片', required: true }
-        ],
-        faq: [
-          { q: '个体户和公司有什么区别？', a: '个体户注册简单、成本低，但承担无限责任；公司承担有限责任，更适合规模经营。' },
-          { q: '个体户需要记账报税吗？', a: '需要。个体户也需按规定进行税务登记和纳税申报。' }
-        ]
-      },
-      {
-        name: '分公司设立',
-        description: '在异地设立分支机构，完成分公司注册登记',
-        icon: '🏛️',
-        basePrice: 1200,
-        timeDesc: '7-10个工作日',
-        isHot: false,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认分公司注册地和经营范围' },
-          { step: 2, title: '提交资料', desc: '提供总公司营业执照、决议等材料' },
-          { step: 3, title: '工商登记', desc: '向分公司所在地工商局提交申请' },
-          { step: 4, title: '领取执照', desc: '领取分公司营业执照' },
-          { step: 5, title: '刻章备案', desc: '分公司印章刻制及备案' }
-        ],
-        materials: [
-          { name: '总公司营业执照副本', required: true },
-          { name: '总公司章程', required: true },
-          { name: '股东会决议', required: true },
-          { name: '分公司负责人身份证', required: true },
-          { name: '分公司注册地址证明', required: true }
-        ],
-        faq: [
-          { q: '分公司需要独立核算吗？', a: '分公司可以选择独立核算或非独立核算，根据实际经营需要决定。' }
-        ]
-      }
-    ]
-  },
-  {
-    category: 'zzbl',
-    categoryName: '资质办理',
-    services: [
-      {
-        name: '食品经营许可证',
-        description: '餐饮、食品销售类企业必备许可证，包含预包装食品、散装食品等',
-        icon: '🍖',
-        basePrice: 1500,
-        timeDesc: '15-20个工作日',
-        isHot: true,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认经营类型和许可范围' },
-          { step: 2, title: '准备材料', desc: '整理申请表、制度文件等材料' },
-          { step: 3, title: '提交申请', desc: '向市场监管局提交许可申请' },
-          { step: 4, title: '现场核查', desc: '配合监管部门进行经营场所现场核查' },
-          { step: 5, title: '领取许可证', desc: '核查通过后领取食品经营许可证' }
-        ],
-        materials: [
-          { name: '营业执照副本', required: true },
-          { name: '法定代表人身份证', required: true },
-          { name: '经营场所平面图', required: true },
-          { name: '食品安全管理制度', required: true },
-          { name: '从业人员健康证明', required: true }
-        ],
-        faq: [
-          { q: '食品经营许可证有效期多久？', a: '食品经营许可证有效期为5年，需在到期前30日内申请延续。' },
-          { q: '需要实地核查吗？', a: '是的，新办食品经营许可证一般需要监管部门进行现场核查。' }
-        ]
-      },
-      {
-        name: '劳务派遣许可证',
-        description: '劳务派遣经营许可证申请，适合人力资源服务企业',
-        icon: '👥',
-        basePrice: 3000,
-        timeDesc: '20-30个工作日',
-        isHot: false,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认申请条件和材料清单' },
-          { step: 2, title: '准备材料', desc: '整理验资报告、制度文件等' },
-          { step: 3, title: '提交申请', desc: '向人社部门提交许可申请' },
-          { step: 4, title: '现场核查', desc: '配合现场核查' },
-          { step: 5, title: '领取许可证', desc: '领取劳务派遣经营许可证' }
-        ],
-        materials: [
-          { name: '营业执照副本', required: true },
-          { name: '验资报告（200万以上）', required: true },
-          { name: '公司章程', required: true },
-          { name: '劳务派遣管理制度', required: true },
-          { name: '经营场所使用证明', required: true }
-        ],
-        faq: [
-          { q: '劳务派遣许可证对注册资本有要求吗？', a: '是的，注册资本不得少于人民币200万元，且需实缴。' }
-        ]
-      }
-    ]
-  },
-  {
-    category: 'swba',
-    categoryName: '税务备案',
-    services: [
-      {
-        name: '税务登记',
-        description: '新注册企业税务登记，包含国税、地税登记及税种核定',
-        icon: '📋',
-        basePrice: 500,
-        timeDesc: '3-5个工作日',
-        isHot: true,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认纳税人类型和税务需求' },
-          { step: 2, title: '准备材料', desc: '提供营业执照、身份证等材料' },
-          { step: 3, title: '税务登记', desc: '向税务局提交登记申请' },
-          { step: 4, title: '税种核定', desc: '核定增值税、企业所得税等税种' },
-          { step: 5, title: '签订协议', desc: '签订三方协议，开通网上申报' }
-        ],
-        materials: [
-          { name: '营业执照副本', required: true },
-          { name: '法定代表人身份证', required: true },
-          { name: '公司章程', required: true },
-          { name: '银行开户许可证', required: true },
-          { name: '注册地址租赁合同', required: true }
-        ],
-        faq: [
-          { q: '一般纳税人和小规模纳税人怎么选？', a: '年应税销售额超过500万必须登记为一般纳税人，未超过的可自愿选择。一般纳税人可抵扣进项税。' }
-        ]
-      },
-      {
-        name: '发票申领',
-        description: '增值税发票领用资格申请，包含专票和普票',
-        icon: '🧾',
-        basePrice: 400,
-        timeDesc: '3-7个工作日',
-        isHot: false,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认发票类型和申请数量' },
-          { step: 2, title: '提交申请', desc: '向税务局提交发票领用申请' },
-          { step: 3, title: '设备办理', desc: '办理税控设备（如需）' },
-          { step: 4, title: '领用发票', desc: '领取增值税发票' }
-        ],
-        materials: [
-          { name: '营业执照副本', required: true },
-          { name: '税务登记证', required: true },
-          { name: '发票专用章', required: true },
-          { name: '经办人身份证', required: true }
-        ],
-        faq: [
-          { q: '专票和普票有什么区别？', a: '专票可以抵扣进项税，普票一般不能抵扣（部分行业除外）。一般纳税人建议申领专票。' }
-        ]
-      }
-    ]
-  },
-  {
-    category: 'zzns',
-    categoryName: '证照年审',
-    services: [
-      {
-        name: '营业执照年检',
-        description: '企业年度报告公示，完成工商年报申报',
-        icon: '📊',
-        basePrice: 300,
-        timeDesc: '1-3个工作日',
-        isHot: true,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认年报内容和申报事项' },
-          { step: 2, title: '整理数据', desc: '整理企业年度经营数据' },
-          { step: 3, title: '填写年报', desc: '在公示系统填报年度报告' },
-          { step: 4, title: '公示完成', desc: '确认年报公示成功' }
-        ],
-        materials: [
-          { name: '营业执照副本', required: true },
-          { name: '年度财务报表', required: true },
-          { name: '社保缴纳证明', required: true }
-        ],
-        faq: [
-          { q: '年报截止时间是什么时候？', a: '每年1月1日至6月30日需完成上一年度年报公示。' },
-          { q: '不报年报会有什么后果？', a: '逾期未报将被列入经营异常名录，影响企业信用和业务办理。' }
-        ]
-      },
-      {
-        name: '许可证年审',
-        description: '各类经营许可证年审续期，确保资质持续有效',
-        icon: '🔄',
-        basePrice: 600,
-        timeDesc: '5-10个工作日',
-        isHot: false,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认需要年审的许可证类型' },
-          { step: 2, title: '准备材料', desc: '整理年审所需材料' },
-          { step: 3, title: '提交年审', desc: '向主管部门提交年审申请' },
-          { step: 4, title: '领取新证', desc: '年审通过后领取新证或签注' }
-        ],
-        materials: [
-          { name: '许可证原件', required: true },
-          { name: '营业执照副本', required: true },
-          { name: '年度经营情况报告', required: true }
-        ],
-        faq: [
-          { q: '哪些许可证需要年审？', a: '食品经营许可证、劳务派遣许可证、人力资源服务许可证等大多需要定期年审或延续。' }
-        ]
-      }
-    ]
-  },
-  {
-    category: 'bgzx',
-    categoryName: '变更注销',
-    services: [
-      {
-        name: '公司变更',
-        description: '公司名称、地址、经营范围、法人、股权等工商变更登记',
-        icon: '✏️',
-        basePrice: 600,
-        timeDesc: '5-7个工作日',
-        isHot: true,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认变更事项和材料需求' },
-          { step: 2, title: '准备材料', desc: '整理变更所需的决议、证明等' },
-          { step: 3, title: '提交申请', desc: '向工商局提交变更登记申请' },
-          { step: 4, title: '领取新照', desc: '领取变更后的营业执照' },
-          { step: 5, title: '同步变更', desc: '同步变更税务、银行等信息' }
-        ],
-        materials: [
-          { name: '营业执照正副本', required: true },
-          { name: '变更决议/决定', required: true },
-          { name: '修正后的公司章程', required: true },
-          { name: '法定代表人身份证', required: true }
-        ],
-        faq: [
-          { q: '股权变更需要交税吗？', a: '股权转让涉及印花税，若转让价格高于投资成本，还需缴纳个人所得税或企业所得税。' },
-          { q: '法人变更多久能办好？', a: '材料齐全一般5-7个工作日，如涉及股权变更可能稍长。' }
-        ]
-      },
-      {
-        name: '公司注销',
-        description: '公司清算注销全流程办理，含税务注销、工商注销',
-        icon: '❌',
-        basePrice: 2000,
-        timeDesc: '30-60个工作日',
-        isHot: false,
-        process: [
-          { step: 1, title: '在线咨询', desc: '评估注销条件和流程' },
-          { step: 2, title: '成立清算组', desc: '成立清算组并发布清算公告' },
-          { step: 3, title: '税务注销', desc: '办理税务清算和税务注销' },
-          { step: 4, title: '工商注销', desc: '提交注销登记申请' },
-          { step: 5, title: '银行销户', desc: '办理银行账户销户' },
-          { step: 6, title: '注销完成', desc: '领取注销通知书' }
-        ],
-        materials: [
-          { name: '营业执照正副本', required: true },
-          { name: '清算报告', required: true },
-          { name: '税务注销证明', required: true },
-          { name: '股东会决议', required: true },
-          { name: '公章', required: true }
-        ],
-        faq: [
-          { q: '公司注销大概需要多久？', a: '简易注销约20天，一般注销需45天公告期加上审批时间，通常1-2个月。' },
-          { q: '简易注销和一般注销有什么区别？', a: '简易注销适用于未发生债权债务或已清偿的小规模企业，流程更简化；一般注销需经过完整的清算程序。' }
-        ]
-      }
-    ]
-  },
-  {
-    category: 'jgzz',
-    categoryName: '建筑资质',
-    services: [
-      {
-        name: '建筑资质办理',
-        description: '施工总承包、专业承包等建筑业企业资质新办申请',
-        icon: '🏗️',
-        basePrice: 8000,
-        timeDesc: '60-90个工作日',
-        isHot: true,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认资质类别和等级' },
-          { step: 2, title: '人员配置', desc: '配置建造师、工程师等人员' },
-          { step: 3, title: '准备材料', desc: '整理业绩证明、人员证书等' },
-          { step: 4, title: '提交申请', desc: '向住建部门提交资质申请' },
-          { step: 5, title: '公示公告', desc: '等待公示和审批结果' },
-          { step: 6, title: '领取证书', desc: '领取建筑业企业资质证书' }
-        ],
-        materials: [
-          { name: '营业执照副本', required: true },
-          { name: '建造师注册证书', required: true },
-          { name: '职称人员证书', required: true },
-          { name: '技术工人证书', required: true },
-          { name: '企业业绩证明', required: true },
-          { name: '社保缴纳证明', required: true }
-        ],
-        faq: [
-          { q: '办理建筑资质对人员有什么要求？', a: '不同类别和等级资质对建造师、职称人员、技术工人有不同数量和专业的要求。' },
-          { q: '资质办理大概需要多久？', a: '材料齐全提交后，一般2-3个月完成审批。' }
-        ]
-      },
-      {
-        name: '安全生产许可证',
-        description: '建筑施工企业安全生产许可证新办申请',
-        icon: '⚠️',
-        basePrice: 5000,
-        timeDesc: '30-45个工作日',
-        isHot: false,
-        process: [
-          { step: 1, title: '在线咨询', desc: '确认安许申请条件' },
-          { step: 2, title: '人员培训', desc: '安排三类人员安全考核' },
-          { step: 3, title: '准备材料', desc: '整理安全管理制度、人员证书等' },
-          { step: 4, title: '提交申请', desc: '向住建部门提交安许申请' },
-          { step: 5, title: '领取证书', desc: '审批通过后领取安全生产许可证' }
-        ],
-        materials: [
-          { name: '营业执照副本', required: true },
-          { name: '建筑资质证书', required: true },
-          { name: '三类人员考核证书', required: true },
-          { name: '安全生产管理制度', required: true },
-          { name: '工伤保险证明', required: true }
-        ],
-        faq: [
-          { q: '安许和建筑资质的关系？', a: '需要先取得建筑资质证书，才能申请安全生产许可证，两者缺一不可。' }
-        ]
-      }
-    ]
-  },
-  {
-    category: 'dljz',
-    categoryName: '代理记账',
-    services: [
-      {
-        name: '小规模代理记账',
-        description: '小规模纳税人月度/季度记账报税服务，专业会计一对多服务',
-        icon: '📒',
-        basePrice: 200,
-        timeDesc: '每月按时完成',
-        isHot: true,
-        process: [
-          { step: 1, title: '签订合同', desc: '确认服务内容和费用' },
-          { step: 2, title: '票据交接', desc: '按月提供原始票据和银行流水' },
-          { step: 3, title: '账务处理', desc: '专业会计进行凭证编制和账务处理' },
-          { step: 4, title: '纳税申报', desc: '按时完成各税种申报' },
-          { step: 5, title: '报表反馈', desc: '提供财务报表和纳税情况反馈' }
-        ],
-        materials: [
-          { name: '营业执照副本', required: true },
-          { name: '银行开户许可证', required: true },
-          { name: '每月原始票据', required: true },
-          { name: '银行对账单', required: true }
-        ],
-        faq: [
-          { q: '代理记账包含哪些服务？', a: '包含凭证编制、账簿登记、纳税申报、年度汇算清缴、工商年报等。' },
-          { q: '每月什么时候提供票据？', a: '建议每月5号前提供上月原始票据，以便按时完成申报。' }
-        ]
-      },
-      {
-        name: '一般纳税人代理记账',
-        description: '一般纳税人月度记账报税服务，含进项认证、专票管理',
-        icon: '📗',
-        basePrice: 500,
-        timeDesc: '每月按时完成',
-        isHot: false,
-        process: [
-          { step: 1, title: '签订合同', desc: '确认服务内容和费用' },
-          { step: 2, title: '票据交接', desc: '按月提供进销项票据和银行流水' },
-          { step: 3, title: '进项认证', desc: '勾选确认进项发票进行抵扣' },
-          { step: 4, title: '账务处理', desc: '编制凭证和登记账簿' },
-          { step: 5, title: '纳税申报', desc: '完成增值税及附加税申报' },
-          { step: 6, title: '报表反馈', desc: '提供财务报表和税务情况分析' }
-        ],
-        materials: [
-          { name: '营业执照副本', required: true },
-          { name: '银行开户许可证', required: true },
-          { name: '每月进销项发票', required: true },
-          { name: '银行对账单', required: true },
-          { name: '工资表', required: true }
-        ],
-        faq: [
-          { q: '一般纳税人代理记账和小规模有什么区别？', a: '一般纳税人涉及进项抵扣、专票管理，账务处理更复杂，费用相对较高。' }
-        ]
-      }
-    ]
-  }
-];
-
-// ==================== Banner 数据 ====================
-const banners = [
-  {
-    title: '工商注册',
-    subtitle: '专业代办，快速拿证',
-    imageUrl: '/images/banner-gszc.png',
-    linkType: 'service',
-    linkValue: 'gszc',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    sortOrder: 1
-  },
-  {
-    title: '资质办理',
-    subtitle: '一站式资质解决方案',
-    imageUrl: '/images/banner-zzbl.png',
-    linkType: 'service',
-    linkValue: 'zzbl',
-    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    sortOrder: 2
-  },
-  {
-    title: '代理记账',
-    subtitle: '省心省力，专业可靠',
-    imageUrl: '/images/banner-dljz.png',
-    linkType: 'service',
-    linkValue: 'dljz',
-    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    sortOrder: 3
-  }
-];
-
-// ==================== 协议数据 ====================
-const agreements = [
-  {
-    type: 'privacy',
-    title: '隐私政策',
-    version: '1.0',
-    content: `企服外勤代办宝隐私政策
-
-更新日期：2026年1月1日
-生效日期：2026年1月1日
-
-一、信息收集
-我们在您使用本服务时，可能会收集以下信息：
-1. 注册信息：微信授权获取的昵称、头像等基本信息；
-2. 身份信息：办理业务所需的姓名、身份证号、手机号等；
-3. 业务信息：您提交的订单、地址、材料等业务相关数据；
-4. 设备信息：设备型号、操作系统版本等。
-
-二、信息使用
-我们收集的信息将用于：
-1. 提供和维护我们的服务；
-2. 处理您的业务订单；
-3. 改善用户体验；
-4. 遵守法律法规要求。
-
-三、信息保护
-我们采用行业标准的安全措施保护您的个人信息，包括但不限于数据加密、访问控制等。
-
-四、信息共享
-未经您的同意，我们不会与第三方共享您的个人信息，但以下情况除外：
-1. 法律法规要求；
-2. 服务提供商（如云存储服务）；
-3. 您授权的第三方。
-
-五、您的权利
-您有权访问、更正、删除您的个人信息，并可撤回授权同意。
-
-六、联系我们
-如对本隐私政策有任何疑问，请通过应用内客服与我们联系。`
-  },
-  {
-    type: 'service',
-    title: '服务协议',
-    version: '1.0',
-    content: `企服外勤代办宝服务协议
-
-更新日期：2026年1月1日
-生效日期：2026年1月1日
-
-一、服务内容
-企服外勤代办宝为企业及个人提供工商注册、资质办理、税务备案、证照年审、变更注销、建筑资质、代理记账等代办服务的信息平台。
-
-二、服务说明
-1. 本平台为信息撮合平台，连接用户与外勤代办人员；
-2. 具体服务由认证外勤员提供，平台负责质量监督；
-3. 服务价格以报价为准，平台展示价格为参考价。
-
-三、用户权利与义务
-1. 用户应提供真实、准确的信息和材料；
-2. 用户应按时支付服务费用；
-3. 用户有权对服务进行评价。
-
-四、外勤员权利与义务
-1. 外勤员需通过实名认证和资质审核；
-2. 外勤员应按约定时间和标准完成服务；
-3. 外勤员应保护用户隐私和商业秘密。
-
-五、费用与退款
-1. 服务费用在报价确认后支付；
-2. 因外勤员原因导致服务无法完成的，全额退款；
-3. 因用户原因取消订单的，按实际发生费用结算。
-
-六、免责声明
-1. 因政府部门原因导致延误的，平台不承担责任；
-2. 因不可抗力导致服务无法完成的，双方协商解决。
-
-七、争议解决
-因本协议产生的争议，双方应友好协商解决；协商不成的，提交当地仲裁委员会仲裁。`
-  }
-];
-
-// ==================== 系统配置数据 ====================
-const systemConfigs = [
-  { key: 'app_name', value: '企服外勤代办宝', description: '应用名称' },
-  { key: 'app_version', value: '1.0.0', description: '应用版本' },
-  { key: 'customer_service_url', value: 'https://kf.qfwq.com', description: '客服链接' },
-  { key: 'city', value: '广州', description: '默认服务城市' },
-  { key: 'order_cancel_hours', value: '24', description: '订单可取消时长(小时)' },
-  { key: 'quote_expire_hours', value: '48', description: '报价过期时长(小时)' },
-  { key: 'review_enabled', value: 'true', description: '是否开启评价功能' },
-  { key: 'upload_max_size', value: '10485760', description: '上传文件最大字节数(10MB)' }
-];
-
-// ==================== 主函数 ====================
 async function main() {
-  console.log('🌱 开始播种数据...\n');
+  console.log('🌱 开始录入种子数据...\n');
 
-  let sortOrder = 0;
+  // ==================== 1. 服务分类 & 服务项 ====================
+  const services = [
+    // 工商注册
+    { name: '公司注册', category: 'business', categoryName: '工商注册', description: '内资/外资企业注册登记，一站式代办', basePrice: 500, timeDesc: '3-5个工作日', isHot: true, orderCount: 326, sortOrder: 1,
+      process: JSON.stringify([{step:1,title:'提交资料',desc:'提供公司名称、经营范围、股东信息'},{step:2,title:'核名',desc:'工商局名称审核'},{step:3,title:'递交材料',desc:'提交注册申请'},{step:4,title:'领取执照',desc:'领取营业执照正副本'},{step:5,title:'刻章备案',desc:'公章、财务章、法人章'}]),
+      materials: JSON.stringify([{name:'法人身份证',required:true},{name:'公司名称预核准',required:true},{name:'经营范围',required:true},{name:'注册地址证明',required:true},{name:'公司章程',required:false}]),
+      faq: JSON.stringify([{q:'注册公司需要多少钱？',a:'代办费用500元起，不含政府工本费'},{q:'没有注册地址怎么办？',a:'我们提供武汉各区合规挂靠地址'},{q:'注册完成后还需要做什么？',a:'需要按时记账报税，建议同步办理'}]),
+      detail: JSON.stringify({highlights:['全程代办无需到场','赠送公章四枚','免费银行开户预约'])})},
+    { name: '个体户注册', category: 'business', categoryName: '工商注册', description: '个体工商户营业执照快速办理', basePrice: 300, timeDesc: '1-3个工作日', isHot: false, orderCount: 189, sortOrder: 2,
+      process: JSON.stringify([{step:1,title:'资料准备',desc:'身份证、经营场所证明'},{step:2,title:'提交申请',desc:'市场监管局提交'},{step:3,title:'领取执照',desc:'审核通过领取营业执照'}]),
+      materials: JSON.stringify([{name:'身份证',required:true},{name:'经营场所证明',required:true},{name:'经营范围',required:true}]),
+      faq: JSON.stringify([{q:'个体户和公司有什么区别？',a:'个体户不具法人资格，税务更简单'},{q:'个体户需要记账吗？',a:'建议建简易账本，方便年报'}]),
+      detail: JSON.stringify({highlights:['最快1天出照','支持线上办理','含年报代办'])})},
+    { name: '公司变更', category: 'business', categoryName: '工商注册', description: '公司名称/地址/法人/股权变更', basePrice: 400, timeDesc: '5-7个工作日', isHot: false, orderCount: 98, sortOrder: 3,
+      process: JSON.stringify([{step:1,title:'确认变更事项',desc:'确定变更内容'},{step:2,title:'准备材料',desc:'股东会决议等'},{step:3,title:'提交变更',desc:'工商局递交'},{step:4,title:'领取新照',desc:'换发新营业执照'}]),
+      materials: JSON.stringify([{name:'原营业执照',required:true},{name:'股东会决议',required:true},{name:'变更申请书',required:true}]),
+      faq: JSON.stringify([{q:'变更地址需要新地址证明吗？',a:'是的，需要提供新地址的租赁合同或产权证'}]),
+      detail: JSON.stringify({highlights:['支持跨区变更','同步变更税务银行','全程代办'])})},
+    { name: '公司注销', category: 'business', categoryName: '工商注册', description: '企业注销、吊销转注销、简易注销', basePrice: 1500, timeDesc: '15-30个工作日', isHot: false, orderCount: 67, sortOrder: 4,
+      process: JSON.stringify([{step:1,title:'清算备案',desc:'成立清算组，登报公告'},{step:2,title:'税务注销',desc:'清税证明'},{step:3,title:'工商注销',desc:'提交注销申请'},{step:4,title:'银行账户注销',desc:'关闭公司账户'}]),
+      materials: JSON.stringify([{name:'营业执照正副本',required:true},{name:'公章',required:true},{name:'法人身份证',required:true},{name:'清算报告',required:false}]),
+      faq: JSON.stringify([{q:'公司不经营了不注销会怎样？',a:'会被吊销营业执照，影响法人征信'},{q:'简易注销和一般注销有什么区别？',a:'简易注销适用于无债权债务的企业，流程更快'}]),
+      detail: JSON.stringify({highlights:['含登报公告','处理疑难注销','全程无需到场'])})},
 
-  // 播种服务数据
-  for (const cat of serviceCategories) {
-    for (const svc of cat.services) {
-      sortOrder++;
-      const service = await prisma.service.upsert({
-        where: { id: sortOrder },
-        update: {
-          name: svc.name,
-          category: cat.category,
-          categoryName: cat.categoryName,
-          description: svc.description,
-          icon: svc.icon,
-          basePrice: svc.basePrice,
-          timeDesc: svc.timeDesc,
-          isHot: svc.isHot,
-          sortOrder: sortOrder,
-          process: svc.process,
-          materials: svc.materials,
-          faq: svc.faq,
-          detail: {
-            description: svc.description,
-            price: svc.basePrice,
-            time: svc.timeDesc
-          }
-        },
-        create: {
-          name: svc.name,
-          category: cat.category,
-          categoryName: cat.categoryName,
-          description: svc.description,
-          icon: svc.icon,
-          basePrice: svc.basePrice,
-          timeDesc: svc.timeDesc,
-          isHot: svc.isHot,
-          sortOrder: sortOrder,
-          process: svc.process,
-          materials: svc.materials,
-          faq: svc.faq,
-          detail: {
-            description: svc.description,
-            price: svc.basePrice,
-            time: svc.timeDesc
-          }
-        }
-      });
-      console.log(`  ✅ 服务: ${svc.name} (${cat.categoryName}) - ID: ${service.id}`);
-    }
+    // 资质办理
+    { name: '食品经营许可证', category: 'license', categoryName: '资质办理', description: '餐饮/食品销售许可证代办', basePrice: 800, timeDesc: '7-10个工作日', isHot: true, orderCount: 215, sortOrder: 5,
+      process: JSON.stringify([{step:1,title:'资料准备',desc:'营业执照、场所平面图等'},{step:2,title:'现场核查',desc:'食药监局现场验收'},{step:3,title:'审批发证',desc:'审核通过后颁发许可证'}]),
+      materials: JSON.stringify([{name:'营业执照',required:true},{name:'经营场所平面图',required:true},{name:'食品安全管理制度',required:true},{name:'从业人员健康证',required:true}]),
+      faq: JSON.stringify([{q:'没有健康证怎么办？',a:'我们可以协助安排体检'},{q:'场地不达标能办吗？',a:'需要先整改达到标准'}]),
+      detail: JSON.stringify({highlights:['含现场指导','协助整改','一次通过率高'])})},
+    { name: '道路运输许可证', category: 'license', categoryName: '资质办理', description: '道路运输经营许可证办理', basePrice: 1200, timeDesc: '10-15个工作日', isHot: false, orderCount: 56, sortOrder: 6,
+      process: JSON.stringify([{step:1,title:'资质审核',desc:'确认企业条件'},{step:2,title:'车辆备案',desc:'运营车辆登记'},{step:3,title:'人员资质',desc:'驾驶员从业资格证'},{step:4,title:'审批发证',desc:'交通运输局审批'}]),
+      materials: JSON.stringify([{name:'营业执照',required:true},{name:'车辆行驶证',required:true},{name:'驾驶员从业资格证',required:true},{name:'安全生产管理制度',required:true}]),
+      faq: JSON.stringify([{q:'需要几辆车才能申请？',a:'至少1辆符合条件的运营车辆'}]),
+      detail: JSON.stringify({highlights:['含车辆备案','协助人员培训','全市可办'])})},
+    { name: '建筑资质', category: 'license', categoryName: '资质办理', description: '建筑施工/装修装饰/机电安装等资质', basePrice: 3000, timeDesc: '20-30个工作日', isHot: true, orderCount: 134, sortOrder: 7,
+      process: JSON.stringify([{step:1,title:'资质匹配',desc:'根据业务确定资质类别'},{step:2,title:'人员配备',desc:'建造师、工程师等'},{step:3,title:'材料编制',desc:'申报资料整理'},{step:4,title:'提交审批',desc:'住建局审批'},{step:5,title:'领取证书',desc:'颁发资质证书'}]),
+      materials: JSON.stringify([{name:'营业执照',required:true},{name:'企业章程',required:true},{name:'技术人员证书',required:true},{name:'办公场所证明',required:true}]),
+      faq: JSON.stringify([{q:'资质需要年检吗？',a:'需要定期动态核查'},{q:'没有建造师怎么办？',a:'可以协助挂靠或招聘'}]),
+      detail: JSON.stringify({highlights:['含人员配备','全程代办','不过退款'])})},
+
+    // 税务服务
+    { name: '代理记账', category: 'tax', categoryName: '税务服务', description: '专业会计团队，月度记账报税', basePrice: 200, timeDesc: '每月持续服务', isHot: true, orderCount: 458, sortOrder: 8,
+      process: JSON.stringify([{step:1,title:'交接票据',desc:'每月提供原始票据'},{step:2,title:'账务处理',desc:'会计做账'},{step:3,title:'税务申报',desc:'按期纳税申报'},{step:4,title:'报表反馈',desc:'月度财务报表推送'}]),
+      materials: JSON.stringify([{name:'银行回单',required:true},{name:'发票',required:true},{name:'费用票据',required:true}]),
+      faq: JSON.stringify([{q:'小规模纳税人和一般纳税人区别？',a:'主要区别在于增值税税率和抵扣方式'},{q:'没有业务也需要报税吗？',a:'是的，零申报也需要按时进行'}]),
+      detail: JSON.stringify({highlights:['资深会计1对1','免费税务咨询','含年报汇算清缴'])})},
+    { name: '税务异常处理', category: 'tax', categoryName: '税务服务', description: '税务非正常户解除、逾期申报处理', basePrice: 600, timeDesc: '5-10个工作日', isHot: false, orderCount: 78, sortOrder: 9,
+      process: JSON.stringify([{step:1,title:'情况诊断',desc:'查询异常原因'},{step:2,title:'补申报',desc:'补做未申报的税种'},{step:3,title:'缴纳罚款',desc:'处理滞纳金'},{step:4,title:'解除异常',desc:'恢复正常状态'}]),
+      materials: JSON.stringify([{name:'营业执照',required:true},{name:'公章',required:true},{name:'法人身份证',required:true}]),
+      faq: JSON.stringify([{q:'异常了有什么影响？',a:'影响税务评级、发票领购、招投标等'}]),
+      detail: JSON.stringify({highlights:['快速解除异常','处理历史遗留','经验丰富'])})},
+
+    // 社保公积金
+    { name: '社保开户', category: 'social', categoryName: '社保公积金', description: '企业社保账户开设、人员增减', basePrice: 300, timeDesc: '3-5个工作日', isHot: false, orderCount: 112, sortOrder: 10,
+      process: JSON.stringify([{step:1,title:'资料准备',desc:'营业执照、法人信息等'},{step:2,title:'开户申请',desc:'社保局开设单位账户'},{step:3,title:'人员增员',desc:'为员工办理参保'}]),
+      materials: JSON.stringify([{name:'营业执照',required:true},{name:'法人身份证',required:true},{name:'银行开户许可证',required:true}]),
+      faq: JSON.stringify([{q:'新员工入职多久要办社保？',a:'入职30日内必须办理'}]),
+      detail: JSON.stringify({highlights:['全程代办','含公积金同步开户','支持批量增员'])})},
+
+    // 银行开户
+    { name: '银行对公开户', category: 'bank', categoryName: '银行开户', description: '基本户/一般户开设，多家银行可选', basePrice: 500, timeDesc: '3-5个工作日', isHot: false, orderCount: 187, sortOrder: 11,
+      process: JSON.stringify([{step:1,title:'选择银行',desc:'根据需求推荐银行网点'},{step:2,title:'预约上门',desc:'银行上门核实场地'},{step:3,title:'开户审批',desc:'银行内部审批'},{step:4,title:'领取开户许可',desc:'领取开户许可证'}]),
+      materials: JSON.stringify([{name:'营业执照正副本',required:true},{name:'公章全套',required:true},{name:'法人身份证',required:true},{name:'公司章程',required:true}]),
+      faq: JSON.stringify([{q:'法人需要到场吗？',a:'部分银行要求法人面签，我们可以安排陪同'},{q:'开户需要存多少钱？',a:'大部分银行无最低存款要求'}]),
+      detail: JSON.stringify({highlights:['覆盖武汉主流银行','含预约陪同','免费年检'])})},
+
+    // 知识产权
+    { name: '商标注册', category: 'ip', categoryName: '知识产权', description: '商标查询、申请、续展一站式服务', basePrice: 600, timeDesc: '9-12个月（审核周期）', isHot: true, orderCount: 267, sortOrder: 12,
+      process: JSON.stringify([{step:1,title:'商标查询',desc:'检索近似商标'},{step:2,title:'提交申请',desc:'向商标局递交'},{step:3,title:'形式审查',desc:'约1个月'},{step:4,title:'实质审查',desc:'约6-9个月'},{step:5,title:'初审公告',desc:'3个月公告期'},{step:6,title:'领取证书',desc:'颁发商标注册证'}]),
+      materials: JSON.stringify([{name:'商标图样',required:true},{name:'营业执照/身份证',required:true},{name:'商品/服务类别',required:true}]),
+      faq: JSON.stringify([{q:'商标注册成功率是多少？',a:'经过专业查询后申请，成功率可达80%以上'},{q:'被驳回了怎么办？',a:'可以做驳回复审，我们提供免费复审咨询'}]),
+      detail: JSON.stringify({highlights:['免费近似查询','驳回退款','含监控预警'])})},
+
+    // 行政许可
+    { name: '医疗器械经营许可证', category: 'admin', categoryName: '行政许可', description: '一类/二类/三类医疗器械经营许可', basePrice: 1500, timeDesc: '15-20个工作日', isHot: false, orderCount: 43, sortOrder: 13,
+      process: JSON.stringify([{step:1,title:'资质评估',desc:'确认经营类别和条件'},{step:2,title:'场地准备',desc:'仓库/经营场所达标'},{step:3,title:'人员配备',desc:'质量管理人员'},{step:4,title:'提交申请',desc:'药监局审批'},{step:5,title:'现场验收',desc:'执法人员实地核查'},{step:6,title:'颁发许可证',desc:'审批通过发证'}]),
+      materials: JSON.stringify([{name:'营业执照',required:true},{name:'经营场所证明',required:true},{name:'质量管理制度',required:true},{name:'人员资质证书',required:true}]),
+      faq: JSON.stringify([{q:'二类备案和三类许可有什么区别？',a:'二类实行备案制，三类需要许可审批'}]),
+      detail: JSON.stringify({highlights:['含场地规划指导','制度模板提供','全程代办'])})},
+    { name: '人力资源服务许可证', category: 'admin', categoryName: '行政许可', description: '人力资源服务/劳务派遣许可办理', basePrice: 2000, timeDesc: '15-20个工作日', isHot: false, orderCount: 35, sortOrder: 14,
+      process: JSON.stringify([{step:1,title:'条件确认',desc:'注册资本≥200万等'},{step:2,title:'验资报告',desc:'出具验资证明'},{step:3,title:'提交申请',desc:'人社局审批'},{step:4,title:'现场核查',desc:'经营场所验收'},{step:5,title:'颁发许可',desc:'领取许可证'}]),
+      materials: JSON.stringify([{name:'营业执照',required:true},{name:'验资报告',required:true},{name:'经营场所证明',required:true},{name:'管理制度',required:true}]),
+      faq: JSON.stringify([{q:'注册资本不够200万怎么办？',a:'需要先办理增资'},{q:'需要几个人？',a:'至少5名大专以上学历的专职人员'}]),
+      detail: JSON.stringify({highlights:['含验资协助','制度模板','快速出证'])})},
+
+    // 其他服务
+    { name: '代办年检', category: 'other', categoryName: '其他服务', description: '企业工商年报、个体户年报', basePrice: 200, timeDesc: '1-3个工作日', isHot: false, orderCount: 345, sortOrder: 15,
+      process: JSON.stringify([{step:1,title:'信息确认',desc:'确认企业信息'},{step:2,title:'填报年报',desc:'国家企业信用信息公示系统'},{step:3,title:'提交公示',desc:'完成年报公示'}]),
+      materials: JSON.stringify([{name:'营业执照',required:true},{name:'法人身份证',required:true}]),
+      faq: JSON.stringify([{q:'年报什么时候截止？',a:'每年1月1日至6月30日'},{q:'不年报会怎样？',a:'会列入经营异常名录'}]),
+      detail: JSON.stringify({highlights:['当天可完成','支持批量','含异常移出'])})},
+    { name: '代办公示', category: 'other', categoryName: '其他服务', description: '企业信息公示、股权变更公示等', basePrice: 150, timeDesc: '1个工作日', isHot: false, orderCount: 89, sortOrder: 16,
+      process: JSON.stringify([{step:1,title:'确认公示内容',desc:'确认需要公示的信息'},{step:2,title:'系统填报',desc:'信用公示系统操作'},{step:3,title:'提交完成',desc:'公示即时生效'}]),
+      materials: JSON.stringify([{name:'营业执照',required:true}]),
+      faq: JSON.stringify([{q:'哪些信息需要公示？',a:'股东出资、股权变更、行政许可等信息'}]),
+      detail: JSON.stringify({highlights:['即时完成','专业准确','含信息核验'])})},
+  ];
+
+  console.log('📋 录入服务数据...');
+  for (const svc of services) {
+    await prisma.service.create({
+      data: {
+        name: svc.name,
+        category: svc.category,
+        categoryName: svc.categoryName,
+        description: svc.description,
+        icon: '',
+        imageUrl: '',
+        basePrice: svc.basePrice,
+        timeDesc: svc.timeDesc,
+        region: '武汉',
+        orderCount: svc.orderCount,
+        isHot: svc.isHot,
+        sortOrder: svc.sortOrder,
+        status: 1,
+        detail: svc.detail || JSON.stringify({}),
+        process: svc.process || JSON.stringify([]),
+        materials: svc.materials || JSON.stringify([]),
+        faq: svc.faq || JSON.stringify([]),
+      },
+    });
   }
+  console.log(`✅ 已录入 ${services.length} 个服务项\n`);
 
-  // 播种 Banner 数据
+  // ==================== 2. Banner 轮播图 ====================
+  const banners = [
+    {
+      title: '企业注册一站式',
+      subtitle: '3天拿照 · 赠送公章 · 银行开户',
+      gradient: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)',
+      linkType: 'service', linkValue: '', sortOrder: 1,
+    },
+    {
+      title: '代理记账 低至200/月',
+      subtitle: '资深会计 · 差错赔付 · 免费税务筹划',
+      gradient: 'linear-gradient(135deg, #047857 0%, #10B981 100%)',
+      linkType: 'service', linkValue: '', sortOrder: 2,
+    },
+    {
+      title: '商标注册 600元起',
+      subtitle: '免费查询 · 驳回退款 · 全程跟踪',
+      gradient: 'linear-gradient(135deg, #B45309 0%, #F59E0B 100%)',
+      linkType: 'service', linkValue: '', sortOrder: 3,
+    },
+    {
+      title: '首单立减100元',
+      subtitle: '新用户专享 · 全品类可用',
+      gradient: 'linear-gradient(135deg, #9333EA 0%, #C084FC 100%)',
+      linkType: 'page', linkValue: '', sortOrder: 4,
+    },
+  ];
+
+  console.log('🖼️  录入Banner数据...');
   for (const banner of banners) {
-    const b = await prisma.banner.upsert({
-      where: { id: banner.sortOrder },
-      update: banner,
-      create: banner
-    });
-    console.log(`  ✅ Banner: ${b.title} - ID: ${b.id}`);
-  }
-
-  // 播种协议数据
-  for (const agreement of agreements) {
-    const a = await prisma.agreement.upsert({
-      where: { type: agreement.type },
-      update: {
-        title: agreement.title,
-        content: agreement.content,
-        version: agreement.version
+    await prisma.banner.create({
+      data: {
+        title: banner.title,
+        subtitle: banner.subtitle,
+        imageUrl: '',
+        gradient: banner.gradient,
+        linkType: banner.linkType,
+        linkValue: banner.linkValue,
+        sortOrder: banner.sortOrder,
+        status: 1,
       },
-      create: agreement
     });
-    console.log(`  ✅ 协议: ${a.title} (${a.type}) - ID: ${a.id}`);
   }
+  console.log(`✅ 已录入 ${banners.length} 个Banner\n`);
 
-  // 播种系统配置
-  for (const config of systemConfigs) {
-    const c = await prisma.systemConfig.upsert({
-      where: { key: config.key },
-      update: {
-        value: config.value,
-        description: config.description
+  // ==================== 3. 协议内容 ====================
+  console.log('📝 录入协议数据...');
+  await prisma.agreement.create({
+    data: {
+      type: 'service',
+      title: '企服代办宝用户服务协议',
+      content: `<h2>企服代办宝用户服务协议</h2>
+<p>更新日期：2026年7月1日 | 生效日期：2026年7月1日</p>
+<h3>一、服务说明</h3>
+<p>企服代办宝（以下简称"本平台"）是武汉本地企业外勤代办服务平台，为用户提供工商注册、资质办理、税务服务、知识产权等企业服务。用户通过本平台发布代办需求，由平台认证的外勤服务人员提供报价并完成代办服务。</p>
+<h3>二、用户注册</h3>
+<p>1. 用户通过微信授权登录即可完成注册。<br>2. 用户应保证提供的信息真实、准确、完整。<br>3. 用户账号仅限本人使用，不得转让、出借。</p>
+<h3>三、服务规范</h3>
+<p>1. 本平台提供信息撮合服务，具体代办服务由外勤人员提供。<br>2. 外勤人员均经过实名认证和资质审核。<br>3. 服务价格由外勤人员报价，用户自主选择。<br>4. 平台不介入价格谈判，但会监督服务质量和合规性。</p>
+<h3>四、费用与支付</h3>
+<p>1. 服务费用由用户与外勤人员协商确定。<br>2. 平台支持线上支付，保障交易安全。<br>3. 服务未完成可申请退款，具体规则见退款政策。</p>
+<h3>五、免责条款</h3>
+<p>1. 因用户提供的资料不实导致的服务延误或失败，平台不承担责任。<br>2. 因政策变化导致的服务流程调整，平台将及时通知但不承担额外责任。<br>3. 不可抗力导致的服务中断，平台不承担责任。</p>
+<h3>六、争议解决</h3>
+<p>本协议适用中华人民共和国法律。因本协议产生的争议，双方应友好协商；协商不成的，提交武汉市有管辖权的人民法院诉讼解决。</p>`,
+      version: '1.0',
+    },
+  });
+
+  await prisma.agreement.create({
+    data: {
+      type: 'privacy',
+      title: '企服代办宝隐私政策',
+      content: `<h2>企服代办宝隐私政策</h2>
+<p>更新日期：2026年7月1日 | 生效日期：2026年7月1日</p>
+<h3>一、信息收集</h3>
+<p>我们可能收集以下信息：<br>1. 微信授权信息（昵称、头像）<br>2. 手机号码（用于身份验证和服务联系）<br>3. 企业信息（用于代办服务）<br>4. 设备信息（用于安全保障）</p>
+<h3>二、信息使用</h3>
+<p>我们收集的信息用于：<br>1. 提供和改进服务<br>2. 身份验证和安全保障<br>3. 服务通知和沟通<br>4. 遵守法律法规要求</p>
+<h3>三、信息保护</h3>
+<p>1. 采用加密技术存储敏感信息<br>2. 严格限制员工访问权限<br>3. 定期进行安全审计<br>4. 不会向第三方出售用户信息</p>
+<h3>四、信息共享</h3>
+<p>仅在以下情况共享信息：<br>1. 获得用户明确同意<br>2. 为完成代办服务需要提供给外勤人员<br>3. 法律法规要求<br>4. 保护平台和用户权益</p>
+<h3>五、用户权利</h3>
+<p>用户有权：<br>1. 查看和更正个人信息<br>2. 删除账号及相关数据<br>3. 撤回授权同意<br>4. 投诉和举报</p>
+<h3>六、联系我们</h3>
+<p>如对本隐私政策有疑问，请联系客服或发送邮件至 privacy@qfwq.com</p>`,
+      version: '1.0',
+    },
+  });
+  console.log('✅ 已录入用户协议和隐私政策\n');
+
+  // ==================== 4. 系统配置 ====================
+  console.log('⚙️  录入系统配置...');
+  const configs = [
+    { key: 'service_phone', value: '027-8888-6666', description: '客服电话' },
+    { key: 'service_hours', value: '工作日 9:00-18:00', description: '客服工作时间' },
+    { key: 'min_quote_count', value: '3', description: '最低报价人数展示' },
+    { key: 'order_auto_cancel_hours', value: '72', description: '订单超时自动取消（小时）' },
+    { key: 'platform_commission_rate', value: '0.10', description: '平台抽成比例' },
+    { key: 'new_user_coupon', value: '100', description: '新用户优惠券金额' },
+    { key: 'city_name', value: '武汉', description: '服务城市' },
+    { key: 'city_code', value: '420100', description: '城市编码' },
+  ];
+
+  for (const config of configs) {
+    await prisma.systemConfig.create({ data: config });
+  }
+  console.log(`✅ 已录入 ${configs.length} 项系统配置\n`);
+
+  // ==================== 5. 示例外勤人员 ====================
+  console.log('👷 录入示例外勤人员...');
+  const runners = [
+    {
+      nickname: '张明', avatarUrl: '', phone: '13800001111',
+      realName: '张明', idCard: '420102199001011234',
+      description: '10年企业服务经验，熟悉武汉各区工商、税务流程。服务态度好，响应速度快，累计服务超过500家企业。',
+      serviceAreas: JSON.stringify(['武昌区', '洪山区', '江夏区']),
+      serviceCategories: JSON.stringify(['business', 'tax', 'social']),
+      rating: 4.9, totalOrders: 523, completionRate: 99.2, avgResponseTime: 8,
+      verified: true,
+    },
+    {
+      nickname: '李娟', avatarUrl: '', phone: '13800002222',
+      realName: '李娟', idCard: '420106199205052345',
+      description: '专注资质办理5年，食品经营许可证、建筑资质通过率高。一对一全程跟进，让您省心省力。',
+      serviceAreas: JSON.stringify(['江汉区', '硚口区', '汉阳区']),
+      serviceCategories: JSON.stringify(['license', 'admin']),
+      rating: 4.8, totalOrders: 312, completionRate: 98.5, avgResponseTime: 12,
+      verified: true,
+    },
+    {
+      nickname: '王强', avatarUrl: '', phone: '13800003333',
+      realName: '王强', idCard: '420111198803033456',
+      description: '知识产权资深顾问，商标注册成功率90%以上。同时提供公司注册、银行开户等一站式服务。',
+      serviceAreas: JSON.stringify(['东湖高新区', '武昌区', '洪山区']),
+      serviceCategories: JSON.stringify(['ip', 'business', 'bank']),
+      rating: 4.7, totalOrders: 267, completionRate: 97.8, avgResponseTime: 15,
+      verified: true,
+    },
+    {
+      nickname: '赵丽', avatarUrl: '', phone: '13800004444',
+      realName: '赵丽', idCard: '420102199505054567',
+      description: '注册会计师，专注代理记账和税务筹划。精通小规模纳税人和一般纳税人账务，服务细致入微。',
+      serviceAreas: JSON.stringify(['武昌区', '青山区', '东西湖区']),
+      serviceCategories: JSON.stringify(['tax']),
+      rating: 4.9, totalOrders: 458, completionRate: 99.5, avgResponseTime: 5,
+      verified: true,
+    },
+  ];
+
+  for (const r of runners) {
+    const user = await prisma.user.create({
+      data: {
+        openid: `runner_${r.phone}`,
+        nickname: r.nickname,
+        avatarUrl: r.avatarUrl,
+        phone: r.phone,
+        role: 'runner',
+        status: 1,
       },
-      create: config
     });
-    console.log(`  ✅ 配置: ${c.key} = ${c.value} - ID: ${c.id}`);
+
+    await prisma.runner.create({
+      data: {
+        userId: user.id,
+        realName: r.realName,
+        idCard: r.idCard,
+        phone: r.phone,
+        avatarUrl: r.avatarUrl,
+        description: r.description,
+        serviceAreas: r.serviceAreas,
+        serviceCategories: r.serviceCategories,
+        rating: r.rating,
+        totalOrders: r.totalOrders,
+        completionRate: r.completionRate,
+        avgResponseTime: r.avgResponseTime,
+        verified: r.verified,
+        status: 1,
+      },
+    });
+  }
+  console.log(`✅ 已录入 ${runners.length} 名外勤人员\n`);
+
+  // ==================== 6. 示例评价 ====================
+  console.log('⭐ 录入示例评价...');
+  const firstRunner = await prisma.runner.findFirst();
+  const secondRunner = await prisma.runner.findMany({ skip: 1, take: 1 });
+  const firstUser = await prisma.user.findFirst({ where: { role: 'runner' } });
+
+  if (firstRunner && firstUser) {
+    const reviews = [
+      { runnerId: firstRunner.id, userId: firstUser.id, serviceName: '公司注册', rating: 5.0, content: '张明老师非常专业，公司注册全程没操心，3天就拿到执照了！强烈推荐！' },
+      { runnerId: firstRunner.id, userId: firstUser.id, serviceName: '代理记账', rating: 4.5, content: '记账很规范，每个月都会准时报税，有问题也能随时咨询。' },
+      { runnerId: secondRunner[0]?.id || firstRunner.id, userId: firstUser.id, serviceName: '食品经营许可证', rating: 5.0, content: '李娟帮忙办的食品经营许可证，一次通过，之前自己跑了好几次都没搞定。' },
+    ];
+
+    for (const review of reviews) {
+      // 创建一个示例订单用于关联评价
+      const hotService = await prisma.service.findFirst({ where: { name: review.serviceName } });
+      if (hotService) {
+        const order = await prisma.order.create({
+          data: {
+            orderNo: `QFW${Date.now()}${Math.random().toString(36).slice(2,6).toUpperCase()}`,
+            userId: review.userId,
+            serviceId: hotService.id,
+            serviceName: review.serviceName,
+            assignedRunnerId: review.runnerId,
+            status: 'completed',
+            title: `${review.serviceName}代办`,
+            contactName: '测试用户',
+            contactPhone: '13800000000',
+            completedAt: new Date(),
+            quoteCount: 3,
+          },
+        });
+
+        await prisma.review.create({
+          data: {
+            orderId: order.id,
+            userId: review.userId,
+            runnerId: review.runnerId,
+            serviceName: review.serviceName,
+            rating: review.rating,
+            content: review.content,
+            images: JSON.stringify([]),
+            status: 1,
+          },
+        });
+      }
+    }
+    console.log(`✅ 已录入示例评价\n`);
   }
 
-  console.log('\n🎉 种子数据播种完成！');
+  console.log('🎉 种子数据录入完成！');
+  console.log('📊 数据统计：');
+  console.log(`   服务项: ${await prisma.service.count()} 个`);
+  console.log(`   Banner: ${await prisma.banner.count()} 个`);
+  console.log(`   协议: ${await prisma.agreement.count()} 个`);
+  console.log(`   系统配置: ${await prisma.systemConfig.count()} 项`);
+  console.log(`   外勤人员: ${await prisma.runner.count()} 名`);
+  console.log(`   评价: ${await prisma.review.count()} 条`);
 }
 
 main()
   .catch((e) => {
-    console.error('❌ 种子数据播种失败:', e);
+    console.error('❌ 种子数据录入失败:', e);
     process.exit(1);
   })
   .finally(async () => {
