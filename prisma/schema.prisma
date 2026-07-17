@@ -55,7 +55,7 @@ model Runner {
   avatarUrl        String   @default("") @db.VarChar(512)
   serviceAreas     Json     @default("[]")
   serviceCategories Json    @default("[]")
-  description      String   @default("") @db.Text
+  description      String   @db.Text
   rating           Decimal  @default(5.0) @db.Decimal(2, 1)
   totalOrders      Int      @default(0)
   completionRate   Decimal  @default(100.0) @db.Decimal(4, 1)
@@ -156,7 +156,7 @@ model Quote {
   runnerId    BigInt   @map("runner_id") @db.BigInt
   price       Decimal  @db.Decimal(10, 2)
   timeEstimate String  @default("") @map("time_estimate") @db.VarChar(128)
-  description String   @default("") @db.Text
+  description String   @db.Text
   runnerIntro String   @default("") @map("runner_intro") @db.VarChar(512)
   status      String   @default("pending") @db.VarChar(32) // pending/selected/rejected
   selected    Boolean  @default(false)
