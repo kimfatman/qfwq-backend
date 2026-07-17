@@ -1,0 +1,307 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 用户角色枚举 ====================
+enum Role {
+  user
+  runner
+  admin
+}
+
+// ==================== 用户表 ====================
+model User {
+  id          BigInt  @id @default(autoincrement()) @db.BigInt
+  openid      String  @unique @db.VarChar(128)
+  unionid     String? @db.VarChar(128)
+  sessionKey  String  @default("") @db.VarChar(128)
+  nickname    String  @default("") @db.VarChar(64)
+  avatarUrl   String  @default("") @db.VarChar(512)
+  phone       String  @default("") @db.VarChar(255) // AES 加密存储
+  companyName String  @default("") @db.VarChar(128)
+  role        Role    @default(user)
+  status      Int     @default(1) @db.TinyInt // 1=正常 0=禁用
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  // 关联关系
+  runner      Runner?
+  orders      Order[]
+  addresses   Address[]
+  reviews     Review[]
+  materials   OrderMaterial[]
+  progresses  OrderProgress[]
+
+  @@map("users")
+}
+
+// ==================== 外勤员表 ====================
+model Runner {
+  id               BigInt   @id @default(autoincrement()) @db.BigInt
+  userId           BigInt   @unique @map("user_id") @db.BigInt
+  realName         String   @db.VarChar(32)
+  idCard           String   @db.VarChar(255) // AES 加密存储
+  phone            String   @db.VarChar(255) // AES 加密存储
+  avatarUrl        String   @default("") @db.VarChar(512)
+  serviceAreas     Json     @default("[]")
+  serviceCategories Json    @default("[]")
+  description      String   @default("") @db.Text
+  rating           Decimal  @default(5.0) @db.Decimal(2, 1)
+  totalOrders      Int      @default(0)
+  completionRate   Decimal  @default(100.0) @db.Decimal(4, 1)
+  avgResponseTime  Int      @default(0) // 平均响应时间（分钟）
+  verified         Boolean  @default(false)
+  status           Int      @default(1) @db.TinyInt // 1=正常 0=禁用 2=审核中
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  // 关联关系
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders  Order[]  @relation("AssignedRunner")
+  quotes  Quote[]
+  reviews Review[]
+
+  @@index([status])
+  @@index([userId])
+  @@map("runners")
+}
+
+// ==================== 服务表 ====================
+model Service {
+  id           BigInt   @id @default(autoincrement()) @db.BigInt
+  name         String   @db.VarChar(64)
+  category     String   @db.VarChar(32)
+  categoryName String   @map("category_name") @db.VarChar(32)
+  description  String   @default("") @db.VarChar(512)
+  icon         String   @default("") @db.VarChar(256)
+  imageUrl     String   @default("") @map("image_url") @db.VarChar(512)
+  basePrice    Decimal  @default(0) @map("base_price") @db.Decimal(10, 2)
+  timeDesc     String   @default("") @map("time_desc") @db.VarChar(128)
+  region       String   @default("") @db.VarChar(128)
+  orderCount   Int      @default(0) @map("order_count")
+  isHot        Boolean  @default(false) @map("is_hot")
+  sortOrder    Int      @default(0) @map("sort_order")
+  status       Int      @default(1) @db.TinyInt // 1=上架 0=下架
+  detail       Json     @default("{}")
+  process      Json     @default("[]")
+  materials    Json     @default("[]")
+  faq          Json     @default("[]")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  // 关联关系
+  orders Order[]
+
+  @@index([category, status])
+  @@map("services")
+}
+
+// ==================== 订单表 ====================
+model Order {
+  id               BigInt    @id @default(autoincrement()) @db.BigInt
+  orderNo          String    @unique @map("order_no") @db.VarChar(32)
+  userId           BigInt    @map("user_id") @db.BigInt
+  serviceId        BigInt    @map("service_id") @db.BigInt
+  serviceName      String    @map("service_name") @db.VarChar(64)
+  assignedRunnerId BigInt?   @map("assigned_runner_id") @db.BigInt
+  status           String    @default("pending") @db.VarChar(32)
+  title            String    @db.VarChar(128)
+  addressId        BigInt?   @map("address_id") @db.BigInt
+  addressSnapshot  String    @default("") @map("address_snapshot") @db.VarChar(512)
+  contactName      String    @default("") @map("contact_name") @db.VarChar(32)
+  contactPhone     String    @default("") @map("contact_phone") @db.VarChar(255)
+  urgency          Boolean   @default(false)
+  remark           String?   @db.Text
+  quoteCount       Int       @default(0) @map("quote_count")
+  selectedQuoteId  BigInt?   @map("selected_quote_id") @db.BigInt
+  completedAt      DateTime? @map("completed_at") @db.DateTime(0)
+  cancelledAt      DateTime? @map("cancelled_at") @db.DateTime(0)
+  cancelReason     String?   @map("cancel_reason") @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  // 关联关系
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service       Service          @relation(fields: [serviceId], references: [id])
+  assignedRunner Runner?         @relation("AssignedRunner", fields: [assignedRunnerId], references: [id])
+  quotes        Quote[]
+  progresses    OrderProgress[]
+  materials     OrderMaterial[]
+  review        Review?
+
+  @@index([userId, status])
+  @@index([assignedRunnerId, status])
+  @@index([orderNo])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+// ==================== 报价表 ====================
+model Quote {
+  id          BigInt   @id @default(autoincrement()) @db.BigInt
+  orderId     BigInt   @map("order_id") @db.BigInt
+  runnerId    BigInt   @map("runner_id") @db.BigInt
+  price       Decimal  @db.Decimal(10, 2)
+  timeEstimate String  @default("") @map("time_estimate") @db.VarChar(128)
+  description String   @default("") @db.Text
+  runnerIntro String   @default("") @map("runner_intro") @db.VarChar(512)
+  status      String   @default("pending") @db.VarChar(32) // pending/selected/rejected
+  selected    Boolean  @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  // 关联关系
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  runner Runner @relation(fields: [runnerId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([runnerId])
+  @@map("quotes")
+}
+
+// ==================== 订单进度表 ====================
+model OrderProgress {
+  id           BigInt   @id @default(autoincrement()) @db.BigInt
+  orderId      BigInt   @map("order_id") @db.BigInt
+  action       String   @db.VarChar(64)
+  title        String   @db.VarChar(64)
+  description  String   @default("") @db.VarChar(512)
+  operatorType String   @map("operator_type") @db.VarChar(16) // user/runner/system
+  operatorId   BigInt?  @map("operator_id") @db.BigInt
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+
+  // 关联关系
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [operatorId], references: [id])
+
+  @@index([orderId, createdAt])
+  @@map("order_progress")
+}
+
+// ==================== 订单材料表 ====================
+model OrderMaterial {
+  id           BigInt  @id @default(autoincrement()) @db.BigInt
+  orderId      BigInt  @map("order_id") @db.BigInt
+  fileUrl      String  @map("file_url") @db.VarChar(512)
+  fileName     String  @map("file_name") @db.VarChar(128)
+  fileType     String  @map("file_type") @db.VarChar(32)
+  fileSize     Int     @default(0) @map("file_size")
+  uploaderType String  @map("uploader_type") @db.VarChar(16) // user/runner
+  uploaderId   BigInt  @map("uploader_id") @db.BigInt
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+
+  // 关联关系
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [uploaderId], references: [id])
+
+  @@index([orderId])
+  @@map("order_materials")
+}
+
+// ==================== 地址表 ====================
+model Address {
+  id          BigInt  @id @default(autoincrement()) @db.BigInt
+  userId      BigInt  @map("user_id") @db.BigInt
+  name        String  @db.VarChar(128) // 地址名称（如"公司"）
+  detail      String  @db.VarChar(512) // 详细地址
+  contactName String  @map("contact_name") @db.VarChar(32)
+  contactPhone String @map("contact_phone") @db.VarChar(255)
+  isDefault   Boolean @default(false) @map("is_default")
+  province    String  @default("") @db.VarChar(32)
+  city        String  @default("") @db.VarChar(32)
+  district    String  @default("") @db.VarChar(32)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  // 关联关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ==================== 评价表 ====================
+model Review {
+  id          BigInt    @id @default(autoincrement()) @db.BigInt
+  orderId     BigInt    @unique @map("order_id") @db.BigInt
+  userId      BigInt    @map("user_id") @db.BigInt
+  runnerId    BigInt    @map("runner_id") @db.BigInt
+  serviceName String    @map("service_name") @db.VarChar(64)
+  rating      Decimal   @db.Decimal(2, 1)
+  content     String    @db.Text
+  images      Json      @default("[]")
+  reply       String?   @db.Text
+  replyAt     DateTime? @map("reply_at") @db.DateTime(0)
+  status      Int       @default(1) @db.TinyInt // 1=显示 0=隐藏
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+
+  // 关联关系
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  runner Runner @relation(fields: [runnerId], references: [id], onDelete: Cascade)
+
+  @@index([runnerId])
+  @@index([userId])
+  @@map("reviews")
+}
+
+// ==================== 轮播图/Banner 表 ====================
+model Banner {
+  id         BigInt    @id @default(autoincrement()) @db.BigInt
+  title      String    @db.VarChar(64)
+  subtitle   String    @default("") @db.VarChar(128)
+  imageUrl   String    @map("image_url") @db.VarChar(512)
+  linkType   String    @default("") @map("link_type") @db.VarChar(32)  // service/page/webview
+  linkValue  String    @default("") @map("link_value") @db.VarChar(256)
+  gradient   String    @default("") @db.VarChar(128) // 渐变色
+  sortOrder  Int       @default(0) @map("sort_order")
+  status     Int       @default(1) @db.TinyInt // 1=显示 0=隐藏
+  startTime  DateTime? @map("start_time") @db.DateTime(0)
+  endTime    DateTime? @map("end_time") @db.DateTime(0)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+
+  @@map("banners")
+}
+
+// ==================== 协议/条款表 ====================
+model Agreement {
+  id       BigInt  @id @default(autoincrement()) @db.BigInt
+  type     String  @unique @db.VarChar(32) // privacy/service
+  title    String  @db.VarChar(64)
+  content  String  @db.LongText
+  version  String  @default("1.0") @db.VarChar(16)
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  @@map("agreements")
+}
+
+// ==================== 系统配置表 ====================
+model SystemConfig {
+  id          BigInt  @id @default(autoincrement()) @db.BigInt
+  key         String  @unique @db.VarChar(64)
+  value       String  @db.Text
+  description String  @default("") @db.VarChar(255)
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+
+  @@map("system_config")
+}
