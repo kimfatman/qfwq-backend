@@ -243,7 +243,32 @@ async function main() {
   }
   console.log(`✅ 已录入 ${configs.length} 项系统配置\n`);
 
-  // ==================== 5. 示例外勤人员 ====================
+  // ==================== 5. 管理员账号 ====================
+  console.log('👤 创建管理员账号...');
+  const existingAdmin = await prisma.user.findFirst({ where: { role: 'admin' } });
+  if (!existingAdmin) {
+    await prisma.user.create({
+      data: {
+        openid: 'admin_master',
+        nickname: '系统管理员',
+        avatarUrl: '',
+        phone: '13800000000',
+        role: 'admin',
+        status: 1,
+      },
+    });
+    // 录入管理员密码配置
+    await prisma.systemConfig.upsert({
+      where: { key: 'admin_password' },
+      create: { key: 'admin_password', value: 'admin123', description: '管理员登录密码' },
+      update: { value: 'admin123' },
+    });
+    console.log('✅ 管理员账号已创建（手机号: 13800000000, 密码: admin123）\n');
+  } else {
+    console.log('⏭️  管理员账号已存在，跳过\n');
+  }
+
+  // ==================== 6. 示例外勤人员 ====================
   console.log('👷 录入示例外勤人员...');
   const runners = [
     {
@@ -317,7 +342,7 @@ async function main() {
   }
   console.log(`✅ 已录入 ${runners.length} 名外勤人员\n`);
 
-  // ==================== 6. 示例评价 ====================
+  // ==================== 7. 示例评价 ====================
   console.log('⭐ 录入示例评价...');
   const firstRunner = await prisma.runner.findFirst();
   const secondRunner = await prisma.runner.findMany({ skip: 1, take: 1 });

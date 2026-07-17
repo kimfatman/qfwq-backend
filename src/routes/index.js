@@ -34,4 +34,13 @@ router.use('/review', require('./review'));
 // 通用模块（部分鉴权，内部管理）
 router.use('/common', require('./common'));
 
+// ==================== 管理后台 ====================
+// 管理员登录（无需admin中间件，单独处理）
+const adminCtrl = require('../controllers/adminController');
+const { authMiddleware } = require('../middleware/auth');
+router.post('/admin/login', adminCtrl.adminLogin);
+
+// 管理后台其他接口（需要 auth + admin 双重鉴权）
+router.use('/admin', require('./admin'));
+
 module.exports = router;
