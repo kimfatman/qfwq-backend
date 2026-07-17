@@ -13,11 +13,17 @@ RUN groupadd -g 1001 nodejs && \
 # 先复制 schema，再用 --ignore-scripts 避免 prepare 脚本在 schema 不存在时执行
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
-RUN npm ci --ignore-scripts && \
+
+# 安装 OpenSSL（Prisma 需要）+ 执行依赖安装和 Prisma 引擎生成
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/* && \
+    npm ci --ignore-scripts && \
     npx prisma generate
 
 # 复制源代码
 COPY src ./src
+
+# 让 appuser 可以写入 prisma 引擎目录（migrate deploy 需要）
+RUN chown -R appuser:nodejs /app/node_modules/.prisma /app/node_modules/@prisma/engines 2>/dev/null || true
 
 # 创建上传和日志目录
 RUN mkdir -p uploads logs && \
