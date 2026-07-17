@@ -14,9 +14,9 @@ RUN groupadd -g 1001 nodejs && \
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
-# 安装 OpenSSL（Prisma 需要）+ 执行依赖安装和 Prisma 引擎生成
-RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/* && \
-    npm ci --ignore-scripts && \
+# 设置环境变量跳过 OpenSSL 检测，强制使用 openssl-3.0.x 引擎
+ENV PRISMA_QUERY_ENGINE_BINARY=/app/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node
+RUN npm ci --ignore-scripts && \
     npx prisma generate
 
 # 复制源代码
