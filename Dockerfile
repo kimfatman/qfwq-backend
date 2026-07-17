@@ -3,6 +3,10 @@ FROM node:20-bookworm-slim
 
 WORKDIR /app
 
+# 用阿里云镜像安装 openssl（Prisma 运行时需要检测 SSL 版本）
+RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null; \
+    apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+
 # 安装 PM2
 RUN npm install -g pm2
 
@@ -14,8 +18,6 @@ RUN groupadd -g 1001 nodejs && \
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
-# 设置环境变量跳过 OpenSSL 检测，强制使用 openssl-3.0.x 引擎
-ENV PRISMA_QUERY_ENGINE_BINARY=/app/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node
 RUN npm ci --ignore-scripts && \
     npx prisma generate
 
@@ -38,4 +40,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/v1/health', (r) => { r.statusCode === 200 ? process.exit(0) : process.exit(1) })"
 
 # 使用 PM2 启动
-CMD ["pm2-runtime", "src/server.js", "--name", "qfwq-backend", "-i", "1"]
+CMD ["sh", "-c", "npx prisma migrate deploy && pm2-runtime src/server.js --name qfwq-backend -i 1"]
