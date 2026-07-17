@@ -1,26 +1,5 @@
-# ============== 阶段1: 依赖安装 ==============
-FROM node:20-bookworm-slim AS deps
-
-WORKDIR /app
-
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production && \
-    npm install prisma --save-dev
-
-COPY prisma ./prisma/
-RUN npx prisma generate
-
-# ============== 阶段2: 构建应用 ==============
-FROM node:20-bookworm-slim AS builder
-
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/prisma ./prisma
-COPY . .
-
-# ============== 阶段3: 生产镜像 ==============
-FROM node:20-bookworm-slim AS runner
+# ============== 生产镜像 ==============
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 
@@ -31,11 +10,14 @@ RUN npm install -g pm2
 RUN groupadd -g 1001 nodejs && \
     useradd -m -u 1001 -g nodejs appuser
 
-# 复制生产依赖和 prisma 客户端
-COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=appuser:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=appuser:nodejs /app/src ./src
-COPY --from=builder --chown=appuser:nodejs /app/package.json ./
+# 先复制 schema，再用 --ignore-scripts 避免 prepare 脚本在 schema 不存在时执行
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma/
+RUN npm ci --ignore-scripts && \
+    npx prisma generate
+
+# 复制源代码
+COPY src ./src
 
 # 创建上传和日志目录
 RUN mkdir -p uploads logs && \
