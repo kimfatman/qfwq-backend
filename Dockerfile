@@ -1,5 +1,5 @@
 # ============== 阶段1: 依赖安装 ==============
-FROM node:20-alpine AS deps
+FROM node:20-bookworm-slim AS deps
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY prisma ./prisma/
 RUN npx prisma generate
 
 # ============== 阶段2: 构建应用 ==============
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ COPY --from=deps /app/prisma ./prisma
 COPY . .
 
 # ============== 阶段3: 生产镜像 ==============
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 
 WORKDIR /app
 
@@ -28,8 +28,8 @@ WORKDIR /app
 RUN npm install -g pm2
 
 # 创建非 root 用户
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S appuser -u 1001 -G nodejs
+RUN groupadd -g 1001 nodejs && \
+    useradd -r -u 1001 -g nodejs appuser
 
 # 复制生产依赖和 prisma 客户端
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
@@ -46,8 +46,8 @@ USER appuser
 EXPOSE 3000
 
 # 健康检查
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/v1/health', (r) => { r.statusCode === 200 ? process.exit(0) : process.exit(1) })"
 
 # 使用 PM2 启动
-CMD ["pm2-runtime", "src/server.js", "--name", "qfwq-backend", "-i", "max"]
+CMD ["pm2-runtime", "src/server.js", "--name", "qfwq-backend", "-i", "1"]
